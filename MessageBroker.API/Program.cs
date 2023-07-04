@@ -1,6 +1,4 @@
 using MassTransit;
-using MessageBroker.Shared.Models;
-using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddMassTransit(c =>
 {
-    c.UsingRabbitMq((c, cfg) =>
+    c.UsingRabbitMq((context, cfg) =>
     {
         
         cfg.Host("localhost", "/", h =>
@@ -21,7 +19,8 @@ builder.Services.AddMassTransit(c =>
             h.Username("admin");
             h.Password("admin");
         });
-    
+
+        cfg.ConfigureEndpoints(context);
     });
     
     

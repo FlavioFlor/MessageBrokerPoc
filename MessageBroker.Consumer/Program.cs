@@ -1,7 +1,5 @@
-
 using MassTransit;
 using MessageBroker.Consumer;
-using RabbitMQ.Client;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
@@ -16,18 +14,32 @@ IHost host = Host.CreateDefaultBuilder(args)
                     h.Username("admin");
                     h.Password("admin");
                 });
-        
+
                 cfg.ReceiveEndpoint("ticket-queue", r =>
                 {
-                    r.ConfigureConsumeTopology = false;
-                    r.ExchangeType = ExchangeType.Direct;
-                    
+                    r.UseMessageRetry(r => r.Interval(2, 100));
                     r.ConfigureConsumer<TicketConsumer>(provider);
-                    
                 });
-                
+
             }));
-            
+
+            //Aqui está uma outra forma de configurar
+            c.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host("localhost", "/", h =>
+                {
+                    h.Username("admin");
+                    h.Password("admin");
+                });
+
+
+                cfg.ReceiveEndpoint("ticket-queue", r =>
+                {
+                    r.UseMessageRetry(r => r.Interval(2, 100));
+                    r.ConfigureConsumer<TicketConsumer>(context);
+                });
+            });
+
         });
     })
     .Build();
